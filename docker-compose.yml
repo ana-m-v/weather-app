@@ -1,0 +1,207 @@
+## MIGHT BE WINDOWS CHECK IMAGE
+
+#version: '3.8'
+#
+#services:
+#  zookeeper:
+#    image: bitnami/zookeeper:latest
+#    container_name: zookeeper
+#    ports:
+#      - "2181:2181"
+#    environment:
+#      ALLOW_ANONYMOUS_LOGIN: "yes"
+#
+#  kafka1:
+#    image: bitnami/kafka:latest
+#    container_name: kafka1
+#    ports:
+#      - "9092:9092"    # External access to broker 1
+#      - "19092:19092"  # Inter-broker communication
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_CFG_LISTENERS: INTERNAL://0.0.0.0:19092,EXTERNAL://0.0.0.0:9092
+#      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka1:19092,EXTERNAL://localhost:9092
+#      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+#      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
+#      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+#      KAFKA_CFG_MIN_INSYNC_REPLICAS: 2
+#      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 3
+#    depends_on:
+#      - zookeeper
+#
+#  kafka2:
+#    image: bitnami/kafka:latest
+#    container_name: kafka2
+#    ports:
+#      - "9093:9093"    # External access to broker 2
+#      - "19093:19093"  # Inter-broker communication
+#    environment:
+#      KAFKA_BROKER_ID: 2
+#      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_CFG_LISTENERS: INTERNAL://0.0.0.0:19093,EXTERNAL://0.0.0.0:9093
+#      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka2:19093,EXTERNAL://localhost:9093
+#      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+#      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
+#      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+#      KAFKA_CFG_MIN_INSYNC_REPLICAS: 2
+#      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 3
+#    depends_on:
+#      - zookeeper
+#
+#  kafka3:
+#    image: bitnami/kafka:latest
+#    container_name: kafka3
+#    ports:
+#      - "9094:9094"    # External access to broker 3
+#      - "19094:19094"  # Inter-broker communication
+#    environment:
+#      KAFKA_BROKER_ID: 3
+#      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_CFG_LISTENERS: INTERNAL://0.0.0.0:19094,EXTERNAL://0.0.0.0:9094
+#      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka3:19094,EXTERNAL://localhost:9094
+#      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+#      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
+#      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+#      KAFKA_CFG_MIN_INSYNC_REPLICAS: 2
+#      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 3
+#    depends_on:
+#      - zookeeper
+#
+#  schema-registry:
+#    image: bitnami/schema-registry:latest
+#    container_name: schema-registry
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+##      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka1:9092,PLAINTEXT_INTERNAL://localhost:19092,PLAINTEXT://kafka2:9093,PLAINTEXT_INTERNAL://localhost:19093,PLAINTEXT://kafka3:9094,PLAINTEXT_INTERNAL://localhost:19094
+#      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093,kafka3:9094
+#    depends_on:
+#      - kafka1
+#      - kafka2
+#      - kafka3
+#
+#  mongo:
+#    image: mongo:6.0
+#    ports:
+#      - "27017:27017"
+
+
+##### MACOS DOCKER-COMPOSE
+version: '3'
+services:
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    ports:
+      - "2181:2181"
+
+  schema-registry:
+    image: bitnami/schema-registry:latest
+    container_name: schema-registry
+    hostname: schema-registry
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKA_BROKERS: "PLAINTEXT://kafka1:19092,PLAINTEXT://kafka2:19093,PLAINTEXT://kafka3:19094"
+    # Skip auth check (workaround for Bitnami script bug):
+      SCHEMA_REGISTRY_SKIP_KAFKA_BROKER_AUTH_CHECK: "yes"
+      SCHEMA_REGISTRY_DEBUG: 'true'
+      SCHEMA_REGISTRY_KAFKASTORE_INIT_TIMEOUT: 120000
+
+  kafka1:
+    image: bitnami/kafka:latest
+    container_name: kafka1
+    hostname: kafka1
+    ports:
+      - "9092:9092"
+      - "19092:19092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://:19092,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:19092,EXTERNAL://<HOST_IP>:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+    healthcheck:
+      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "kafka1:19092", "--list" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka2:
+    image: bitnami/kafka:latest
+    container_name: kafka2
+    hostname: kafka2
+    ports:
+      - "9093:9093"
+      - "19093:19093"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://:19093,EXTERNAL://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:19093,EXTERNAL://<HOST_IP>:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+    healthcheck:
+      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "kafka2:19093", "--list" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka3:
+    image: bitnami/kafka:latest
+    container_name: kafka3
+    hostname: kafka3
+    ports:
+      - "9094:9094"
+      - "19094:19094"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://:19094,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka3:19094,EXTERNAL://<HOST_IP>:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+    healthcheck:
+      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "kafka3:19094", "--list" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    ports:
+      - "27017:27017"
+
+

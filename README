@@ -1,0 +1,69 @@
+install zookeeper
+install kafka
+install schema registry
+install avro
+dotnet add package Confluent.SchemaRegistry.Serdes.Avro
+
+
+Open a terminal and navigate to the directory where the file is located.
+
+Note: On a OSX bitami kafka
+
+Run
+
+docker-compose up -d
+
+Check if Kafka and Zookeeper are running:
+
+docker-compose ps
+
+Check existing topics
+
+docker exec -it kafka1 /opt/bitnami/kafka/bin/kafka-topics.sh --describe \
+  --topic weather-topic \
+  --bootstrap-server kafka1:9092
+
+If none, create manually
+
+docker exec -it kafka1 /opt/bitnami/kafka/bin/kafka-topics.sh --create \
+  --topic weather-topic \
+  --partitions 3 \
+  --replication-factor 3 \
+  --bootstrap-server kafka1:9092
+
+
+ docker exec -it kafka1 /opt/bitnami/kafka/bin/kafka-topics.sh --create \
+   --topic processed-data-topic \
+   --partitions 3 \
+   --replication-factor 3 \
+   --bootstrap-server kafka1:9092
+
+
+register AVRO schemas
+
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+    --data @WeatherPayload.json \
+    http://localhost:8081/subjects/weather-topic-value/versions
+
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+    --data @ProcessedDataPayload.json \
+    http://localhost:8081/subjects/processed-data-topic-value/versions
+
+
+start WeatherProducer
+start WeatherStream
+start WeatherConsumer
+
+
+
+check kafka topics
+
+docker exec kafka1 kafka-console-consumer.sh \
+  --topic weather-topic \
+  --bootstrap-server kafka1:19092 \
+  --from-beginning
+
+check mongodb
+
+docker exec -it mongo mongosh weather
+db.processed-data.find().pretty()
