@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "Weather",
+  "namespace": "com.weather.avro",
+  "fields": [
+    { "name": "location", "type": "string" },
+    { "name": "temperature", "type": "double" },
+    { "name": "humidity", "type": "double" },
+    { "name": "suggestion", "type": "string" }
+  ]
+}

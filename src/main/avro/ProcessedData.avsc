@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "ProcessedData",
+  "namespace": "com.weather.avro",
+  "fields": [
+    { "name": "location", "type": "string" },
+    { "name": "suggestion", "type": "string" }
+  ]
+}
