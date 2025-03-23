@@ -45,6 +45,8 @@ docker exec -it kafka1 /opt/bitnami/kafka/bin/kafka-topics.sh --create \
    --bootstrap-server kafka1:9092
 
 
+
+
 register AVRO schemas
 
 curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
@@ -73,6 +75,9 @@ docker exec kafka1 kafka-console-consumer.sh \
   --topic weather-topic \
   --bootstrap-server kafka1:19092 \
   --from-beginning
+
+
+
 
 check mongodb
 
