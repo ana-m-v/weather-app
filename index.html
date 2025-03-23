@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather Suggestion</title>
+</head>
+<body>
+<h1>Weather Suggestion</h1>
+<form id="weatherForm">
+    <label for="location">Location:</label>
+    <input type="text" id="location" name="location">
+    <button type="submit">Get Suggestion</button>
+</form>
+<div id="suggestion"></div>
+
+<script>
+    document.getElementById('weatherForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const location = document.getElementById('location').value;
+
+        // Step 1: Request weather data
+        fetch(`http://localhost:8080/weather/request?location=${location}`)
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);
+
+                // Step 2: Poll for the suggestion
+                const pollInterval = 1000; // Poll every 1 second
+                const maxAttempts = 10; // Maximum number of attempts
+                let attempts = 0;
+
+                const poll = setInterval(() => {
+                    fetch(`http://localhost:8080/weather/suggestion?location=${location}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(error => { throw error; });
+                            }
+                            return response.json();
+                        })
+                        .then(suggestion => {
+                            clearInterval(poll); // Stop polling
+                            document.getElementById('suggestion').innerText = suggestion.suggestion;
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            attempts++;
+                            if (attempts >= maxAttempts) {
+                                clearInterval(poll); // Stop polling after max attempts
+                                document.getElementById('suggestion').innerText = "Suggestion not available";
+                            }
+                        });
+                }, pollInterval);
+            });
+    });
+</script>
+</body>
+</html>
