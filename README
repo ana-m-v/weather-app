@@ -84,7 +84,6 @@ open index html
 
 query locations
 
-
 check kafka topics
 
 docker exec kafka1 kafka-console-consumer.sh \
@@ -92,10 +91,37 @@ docker exec kafka1 kafka-console-consumer.sh \
   --bootstrap-server kafka1:19092 \
   --from-beginning
 
+check mongo
+
+connect to db
+weather-app % docker exec -it mongo mongosh weather
+
+check collections
+weather> db.getCollectionNames();
+
+check specific collection
+db.getCollection('COLLECTION_NAME').find().pretty()
+
+check request
+curl -X GET "http://localhost:8080/weather/suggestion?location=Berlin"
 
 
+Walkthrough:
+Input:
+User enters New York in the location field and clicks Submit.
 
-check mongodb
+Steps:
 
-docker exec -it mongo mongosh weather
-db.processed-data.find().pretty()
+Frontend sends a request to http://localhost:8080/weather/request?location=New%20York.
+
+Backend fetches weather data for New York from WeatherStack API.
+
+Backend sends the weather data to Kafka (weather-topic).
+
+Kafka Streams aggregates the data and writes it to aggregated-weather-topic.
+
+Kafka Consumer reads the aggregated data and stores it in MongoDB.
+
+Frontend polls http://localhost:8080/weather/suggestion?location=New%20York until data is available.
+
+Frontend displays the aggregated data (e.g., average temperature, number of records).
