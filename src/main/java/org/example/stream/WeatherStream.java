@@ -20,8 +20,8 @@ public class WeatherStream {
     public static void main(String[] args) {
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "weather-stream-app");
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.206:9092,192.168.0.206:9093,192.168.0.206:9094");
-        props.put("schema.registry.url", "http://192.168.0.206:8081");
+        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "<HOST_IP>:9092,<HOST_IP>:9093,<HOST_IP>:9094");
+        props.put("schema.registry.url", "http://<HOST_IP>:8081");
         props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE_V2);
         props.put("security.protocol", "PLAINTEXT");
 
@@ -73,8 +73,8 @@ public class WeatherStream {
 //    public static void main(String[] args) {
 //        Properties props = new Properties();
 //        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "weather-stream-app");
-//        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.206:9092,192.168.0.206:9093,192.168.0.206:9094");
-//        props.put("schema.registry.url", "http://192.168.0.206:8081");
+//        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "<HOST_IP>:9092,<HOST_IP>:9093,<HOST_IP>:9094");
+//        props.put("schema.registry.url", "http://<HOST_IP>:8081");
 //        props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE_V2);
 //        props.put("security.protocol", "PLAINTEXT");
 //
@@ -153,8 +153,8 @@ public class WeatherStream {
 //    public static void main(String[] args) {
 //        Properties props = new Properties();
 //        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "weather-stream-app");
-//        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.206:9092,192.168.0.206:9093,192.168.0.206:9094");
-//        props.put("schema.registry.url", "http://192.168.0.206:8081");
+//        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "<HOST_IP>:9092,<HOST_IP>:9093,<HOST_IP>:9094");
+//        props.put("schema.registry.url", "http://<HOST_IP>:8081");
 //        props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE_V2);
 //        props.put("security.protocol", "PLAINTEXT");
 //

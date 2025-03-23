@@ -25,10 +25,10 @@ public class WeatherProducer {
     // Constructor to initialize the Kafka producer
     public WeatherProducer() {
         Properties props = new Properties();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.206:9092,192.168.0.206:9093,192.168.0.206:9094");
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "<HOST_IP>:9092,<HOST_IP>:9093,<HOST_IP>:9094");
         props.put("key.serializer", KafkaAvroSerializer.class.getName());
         props.put("value.serializer", KafkaAvroSerializer.class.getName());
-        props.put("schema.registry.url", "http://192.168.0.206:8081");
+        props.put("schema.registry.url", "http://<HOST_IP>:8081");
         props.put("security.protocol", "PLAINTEXT");
         props.put("client.dns.lookup", "use_all_dns_ips");
 

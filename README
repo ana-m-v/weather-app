@@ -9,6 +9,9 @@ Open a terminal and navigate to the directory where the file is located.
 
 Note: On a OSX bitami kafka
 
+Go through docker-compose.yml and change <HOST_IP> with your local host ip
+Do the same with all the services and Java files (change <HOST_IP> with your local host ip
+
 Run
 
 docker-compose up -d

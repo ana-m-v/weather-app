@@ -15,16 +15,16 @@ import java.util.Properties;
 public class WeatherConsumer {
     public static void main(String[] args) {
         Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.206:9092,192.168.0.206:9093,192.168.0.206:9094");
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "<HOST_IP>:9092,<HOST_IP>:9093,<HOST_IP>:9094");
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "weather-consumer-group");
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", KafkaAvroDeserializer.class.getName());
-        props.put("schema.registry.url", "http://192.168.0.206:8081");
+        props.put("schema.registry.url", "http://<HOST_IP>:8081");
         props.put("specific.avro.reader", "true");
         props.put("security.protocol", "PLAINTEXT");
 
 
-        MongoClient mongoClient = MongoClients.create("mongodb://192.168.0.206:27017");
+        MongoClient mongoClient = MongoClients.create("mongodb://<HOST_IP>:27017");
         MongoCollection<Document> collection = mongoClient.getDatabase("weather").getCollection("processed-data");
 
         Consumer<String, ProcessedData> consumer = new KafkaConsumer<>(props);
