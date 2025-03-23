@@ -38,6 +38,12 @@ docker exec -it kafka1 /opt/bitnami/kafka/bin/kafka-topics.sh --create \
    --replication-factor 3 \
    --bootstrap-server kafka1:9092
 
+ docker exec -it kafka1 /opt/bitnami/kafka/bin/kafka-topics.sh --create \
+   --topic aggregated-weather-topic \
+   --partitions 3 \
+   --replication-factor 3 \
+   --bootstrap-server kafka1:9092
+
 
 register AVRO schemas
 
@@ -50,10 +56,15 @@ curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
     http://localhost:8081/subjects/processed-data-topic-value/versions
 
 
-start WeatherProducer
-start WeatherStream
-start WeatherConsumer
+docker-compose up -d
 
+start WeatherStream (java)
+start WeatherConsumer (java)
+start WeatherAPI (java)
+
+open index html
+
+query locations
 
 
 check kafka topics
