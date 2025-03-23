@@ -3,6 +3,7 @@ package org.example.api;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.example.producer.WeatherProducer;
 
 import java.io.IOException;
@@ -11,7 +12,9 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.mongodb.client.MongoClient;
@@ -26,7 +29,7 @@ public class WeatherAPI {
     private static final WeatherProducer weatherProducer = new WeatherProducer();
     private static final MongoClient mongoClient = MongoClients.create("mongodb://<HOST_IP>:27017");
     private static final MongoDatabase database = mongoClient.getDatabase("weather");
-    private static final MongoCollection<Document> collection = database.getCollection("processed-data");
+    private static final MongoCollection<Document> collection = database.getCollection("aggregated-weather");
 
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);

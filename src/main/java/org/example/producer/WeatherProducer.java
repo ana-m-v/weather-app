@@ -6,48 +6,56 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 
 public class WeatherProducer {
-
     private static final String TOPIC = "weather-topic";
-    private static final String API_KEY = "30ba5da68dc6fada26a601a16cbe29ca"; // Your weatherstack API key
+    private static final String API_KEY = "f662e382e4eeede1931aba50b167acbc";
+    private final KafkaProducer<String, Weather> producer;
 
-    private final Producer<String, Weather> producer;
-
-    // Constructor to initialize the Kafka producer
     public WeatherProducer() {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "<HOST_IP>:9092,<HOST_IP>:9093,<HOST_IP>:9094");
-        props.put("key.serializer", KafkaAvroSerializer.class.getName());
-        props.put("value.serializer", KafkaAvroSerializer.class.getName());
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
         props.put("schema.registry.url", "http://<HOST_IP>:8081");
         props.put("security.protocol", "PLAINTEXT");
-        props.put("client.dns.lookup", "use_all_dns_ips");
 
         this.producer = new KafkaProducer<>(props);
     }
 
-    // Method to produce weather data for a given location
     public void produceWeatherData(String location) {
         try {
-            // Fetch weather data from the weatherstack API
             String response = fetchWeatherData(location);
-
-            // Parse the response with JSONObject
             JSONObject json = new JSONObject(response);
-            double temperature = json.getJSONObject("current").getDouble("temperature");
-            double humidity = json.getJSONObject("current").getDouble("humidity");
+
+            // Handle API errors
+            if (json.has("error")) {
+                JSONObject error = json.getJSONObject("error");
+                throw new RuntimeException("WeatherAPI Error: " + error.getString("info"));
+            }
+
+            // Validate response structure
+            if (!json.has("current")) {
+                throw new JSONException("Missing 'current' object in API response");
+            }
+
+            JSONObject current = json.getJSONObject("current");
+            double temperature = current.getDouble("temperature");
+            double humidity = current.getDouble("humidity");
             String suggestion = getSuggestion(temperature);
 
-            // Build the Weather Avro object
             Weather weather = Weather.newBuilder()
                     .setLocation(location)
                     .setTemperature(temperature)
@@ -55,34 +63,50 @@ public class WeatherProducer {
                     .setSuggestion(suggestion)
                     .build();
 
-            // Create a ProducerRecord
             ProducerRecord<String, Weather> record = new ProducerRecord<>(TOPIC, location, weather);
 
-            // Send record with a callback
             producer.send(record, (metadata, exception) -> {
-                if (exception == null) {
-                    System.out.println("Message sent: " + weather);
+                if (exception != null) {
+                    System.err.println("Failed to send record: " + exception.getMessage());
                 } else {
-                    exception.printStackTrace();
+                    System.out.println("Sent weather data for " + location +
+                            " to partition " + metadata.partition());
                 }
             });
-
             producer.flush();
+
         } catch (Exception e) {
+            System.err.println("Failed to process weather data for " + location + ": " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    // Fetch weather data from the weatherstack API
     private String fetchWeatherData(String location) throws Exception {
-        String apiUrl = "http://api.weatherstack.com/current?access_key=" + API_KEY + "&query=" + location;
+        String encodedLocation = URLEncoder.encode(location, StandardCharsets.UTF_8.name());
+        String apiUrl = "http://api.weatherstack.com/current?access_key=" + API_KEY + "&query=" + encodedLocation;
+
         HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl).openConnection();
         conn.setRequestMethod("GET");
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        int responseCode = conn.getResponseCode();
+        if (responseCode != 200) {
+            BufferedReader errorReader = new BufferedReader(
+                    new InputStreamReader(conn.getErrorStream())
+            );
+            StringBuilder errorResponse = new StringBuilder();
+            String line;
+            while ((line = errorReader.readLine()) != null) {
+                errorResponse.append(line);
+            }
+            errorReader.close();
+            throw new RuntimeException("API request failed: " + errorResponse.toString());
+        }
+
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(conn.getInputStream())
+        );
         StringBuilder response = new StringBuilder();
         String line;
-
         while ((line = in.readLine()) != null) {
             response.append(line);
         }
@@ -91,18 +115,13 @@ public class WeatherProducer {
         return response.toString();
     }
 
-    // Generate a suggestion based on temperature
     private String getSuggestion(double temperature) {
-        if (temperature > 15) {
-            return "Drink cold beverages";
-        } else if (temperature < 10) {
-            return "Drink hot beverages";
-        } else {
-            return "Room temperature drinks are fine";
-        }
+        if (temperature > 30) return "Stay cool! Drink plenty of water";
+        if (temperature > 20) return "Enjoy the pleasant weather";
+        if (temperature > 10) return "Wear a light jacket";
+        return "It's cold outside! Bundle up";
     }
 
-    // Close the producer
     public void close() {
         producer.close();
     }

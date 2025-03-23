@@ -1,18 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Weather Suggestion</title>
+    <title>Weather Aggregated Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"] {
+            padding: 5px;
+            width: 200px;
+        }
+        button {
+            padding: 5px 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #weather-data {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+    </style>
 </head>
 <body>
-<h1>Weather Suggestion</h1>
+<h1>Weather Aggregated Data</h1>
 <form id="weatherForm">
     <label for="location">Location:</label>
-    <input type="text" id="location" name="location">
-    <button type="submit">Get Suggestion</button>
+    <input type="text" id="location" name="location" placeholder="Enter a location">
+    <button type="submit">Get Aggregated Data</button>
 </form>
-<div id="suggestion"></div>
+<div id="weather-data">
+    <h2>Weather Data for <span id="location-name"></span></h2>
+    <p>Average Temperature: <span id="avg-temp"></span>°C</p>
+    <p>Number of Records: <span id="record-count"></span></p>
+</div>
 
 <script>
+    // index.html
     document.getElementById('weatherForm').addEventListener('submit', function(event) {
         event.preventDefault();
         const location = document.getElementById('location').value;
@@ -23,9 +63,9 @@
             .then(data => {
                 console.log(data);
 
-                // Step 2: Poll for the suggestion
-                const pollInterval = 1000; // Poll every 1 second
-                const maxAttempts = 10; // Maximum number of attempts
+                // Step 2: Poll for the aggregated data
+                const pollInterval = 2000; // Poll every 2 seconds (was 1 second)
+                const maxAttempts = 15; // Maximum attempts increased to 15 (was 10)
                 let attempts = 0;
 
                 const poll = setInterval(() => {
@@ -36,21 +76,90 @@
                             }
                             return response.json();
                         })
-                        .then(suggestion => {
-                            clearInterval(poll); // Stop polling
-                            document.getElementById('suggestion').innerText = suggestion.suggestion;
+                        .then(aggregatedData => {
+                            // Stop polling only if the count > 1 (or your condition)
+                            if (aggregatedData.count > 1) {
+                                clearInterval(poll);
+                                updateUI(aggregatedData);
+                            }
                         })
                         .catch(error => {
                             console.error("Error:", error);
                             attempts++;
                             if (attempts >= maxAttempts) {
-                                clearInterval(poll); // Stop polling after max attempts
-                                document.getElementById('suggestion').innerText = "Suggestion not available";
+                                clearInterval(poll);
+                                document.getElementById('weather-data').innerHTML = "<p>Aggregated data not available for this location.</p>";
                             }
                         });
                 }, pollInterval);
             });
     });
+
+    // Function to update the UI with aggregated data
+    function updateUI(aggregatedData) {
+        document.getElementById('location-name').textContent = aggregatedData.location;
+        document.getElementById('avg-temp').textContent = aggregatedData.averageTemperature.toFixed(2); // Display average temperature with 2 decimal places
+        console.log(aggregatedData)
+        document.getElementById('record-count').textContent = aggregatedData.count; // Display the number of records
+    }
 </script>
 </body>
 </html>
+
+
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--    <title>Weather Suggestion</title>-->
+<!--</head>-->
+<!--<body>-->
+<!--<h1>Weather Suggestion</h1>-->
+<!--<form id="weatherForm">-->
+<!--    <label for="location">Location:</label>-->
+<!--    <input type="text" id="location" name="location">-->
+<!--    <button type="submit">Get Suggestion</button>-->
+<!--</form>-->
+<!--<div id="suggestion"></div>-->
+
+<!--<script>-->
+<!--    document.getElementById('weatherForm').addEventListener('submit', function(event) {-->
+<!--        event.preventDefault();-->
+<!--        const location = document.getElementById('location').value;-->
+
+<!--        // Step 1: Request weather data-->
+<!--        fetch(`http://localhost:8080/weather/request?location=${location}`)-->
+<!--            .then(response => response.text())-->
+<!--            .then(data => {-->
+<!--                console.log(data);-->
+
+<!--                // Step 2: Poll for the suggestion-->
+<!--                const pollInterval = 1000; // Poll every 1 second-->
+<!--                const maxAttempts = 10; // Maximum number of attempts-->
+<!--                let attempts = 0;-->
+
+<!--                const poll = setInterval(() => {-->
+<!--                    fetch(`http://localhost:8080/weather/suggestion?location=${location}`)-->
+<!--                        .then(response => {-->
+<!--                            if (!response.ok) {-->
+<!--                                return response.json().then(error => { throw error; });-->
+<!--                            }-->
+<!--                            return response.json();-->
+<!--                        })-->
+<!--                        .then(suggestion => {-->
+<!--                            clearInterval(poll); // Stop polling-->
+<!--                            document.getElementById('suggestion').innerText = suggestion.suggestion;-->
+<!--                        })-->
+<!--                        .catch(error => {-->
+<!--                            console.error("Error:", error);-->
+<!--                            attempts++;-->
+<!--                            if (attempts >= maxAttempts) {-->
+<!--                                clearInterval(poll); // Stop polling after max attempts-->
+<!--                                document.getElementById('suggestion').innerText = "Suggestion not available";-->
+<!--                            }-->
+<!--                        });-->
+<!--                }, pollInterval);-->
+<!--            });-->
+<!--    });-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->

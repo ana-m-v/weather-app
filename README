@@ -47,7 +47,11 @@ docker exec -it kafka1 /opt/bitnami/kafka/bin/kafka-topics.sh --create \
    --replication-factor 3 \
    --bootstrap-server kafka1:9092
 
-
+ docker exec -it kafka1 /opt/bitnami/kafka/bin/kafka-topics.sh --create \
+   --topic high-temperature-alerts-topic \
+   --partitions 3 \
+   --replication-factor 3 \
+   --bootstrap-server kafka1:9092
 
 
 register AVRO schemas
@@ -59,6 +63,15 @@ curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
 curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
     --data @ProcessedDataPayload.json \
     http://localhost:8081/subjects/processed-data-topic-value/versions
+
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+    --data @AverageTemperaturePayload.json \
+    http://localhost:8081/subjects/average-temperature-topic-value/versions
+
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+    --data @AggregatedWeatherPayload.json \
+    http://localhost:8081/subjects/average-temperature-topic-value/versions
+
 
 
 docker-compose up -d
