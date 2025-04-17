@@ -1,3 +1,7 @@
+NOTE:
+- relevant branch is "aggregate"
+- cloud infra is it's own repo https://github.com/ana-m-v/weather-system
+
 install zookeeper
 install kafka
 install schema registry
